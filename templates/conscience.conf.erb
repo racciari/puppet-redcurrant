@@ -1,0 +1,109 @@
+[General]
+daemon=false
+to_op=300000
+to_cnx=300000
+pidfile=<%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>/conscience-<%= @num %>.pid
+
+[Service]
+namespace=<%= @options["ns"] %>
+type=conscience
+register=false
+
+load_ns_info=false
+
+
+[Server.conscience]
+min_workers=30
+min_spare_workers=30
+max_spare_workers=100
+max_workers=200
+
+listen=<%= @options["port"] %>
+
+plugins=conscience,stats,fallback,ping<% if @options["enable_plugin_spoolmess"] == "true" %>,spoolmess<% end %>
+
+<% if @options["enable_plugin_spoolmess"] == "true" %>[Plugin.spoolmess]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/alert_spoolmess.so
+param_sopcode_prefix=<%= @options["sop_prefix"] ? @options["sop_prefix"] : 'MUT-GRD' %>
+param_message_prefix=[~BCO]<%= @options["cob"] ? @options["cob"] : 'DEFAULT' %>[~ECO][~BCL]<%= @options["client"] ? @options["client"] : 'REDCURRANT' %>[~ECL]
+param_mapping:default=7000
+param_mapping:srv.threads=0399
+param_mapping:conscience.rawx.score=0300
+param_mapping:conscience.meta1.score=0301
+param_mapping:conscience.meta2.score=0302
+param_mapping:conscience.meta1.broken=0303
+param_mapping:conscience.meta2.broken=0304
+param_mapping:conscience.solr.score=0305
+
+<% end %>
+[Plugin.stats]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_stats.so
+
+[Plugin.fallback]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_fallback.so
+
+[Plugin.ping]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_ping.so
+
+[Plugin.conscience]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_conscience.so
+param_namespace=<%= @options["ns"] %>
+param_chunk_size=<%= @options["chunk_size"] ? @options["chunk_size"] : '10485760' %>
+param_score_timeout=300
+param_meta0=<%= @options["meta0_url"] %>
+param_serialize_srvinfo_cache=true
+param_option.ns_status=<%= @options["state"] %>
+param_option.automatic_open=true
+param_option.meta2_max_versions=0
+#param_option.storage_policy=
+param_option.service_update_policy.meta1=meta2=KEEP|1|1|tag.type=m2v2;solr=APPEND;redis=REPLACE;sqlx=APPEND|1|1;tsmx=KEEP
+param_storage_conf=<%= @sysconfdir %>/conscience-<%= @num %>.storage
+<% if @options["enable_worm"] == "true" %>param_option.worm=on
+<% end %>
+<% if @options["auto_container"] == "true" %>param_option.event_delay=30
+param_option.FLATNS_hash_bitlength=17
+param_option.FLATNS_hash_offset=0
+param_option.FLATNS_hash_size=0
+
+<% end %>
+param_events=<%= @sysconfdir %>/conscience-<%= @num %>.events
+
+<% if @options["vns"] %>param_option.vns_list=<%= @options["vns"] %>
+
+<% end %>
+param_service.default.score_timeout=300
+param_service.default.score_variation_bound=5
+param_service.default.score_expr=100
+
+param_service.meta1.score_timeout=300
+param_service.meta1.score_variation_bound=5
+param_service.meta1.score_expr=root(2,((num stat.cpu) * (num stat.req_idle)))
+
+param_service.meta2.score_timeout=300
+param_service.meta2.score_variation_bound=5
+param_service.meta2.score_expr=((num stat.space)>=5) * root(3,((num stat.cpu)*(num stat.req_idle)*(num stat.space)))
+
+param_service.rawx.score_timeout=300
+param_service.rawx.score_variation_bound=5
+param_service.rawx.score_expr=((num stat.space)>=3) * root(2,((num stat.cpu)*(num stat.space)))
+
+param_service.solr.score_timeout=300
+param_service.solr.score_variation_bound=5
+param_service.solr.score_expr=((num stat.index_size)<=85899345920) * root(4,(num stat.cpu)*(num stat.space)*(num stat.space)*(num stat.space))
+
+param_service.saver.score_timeout=300
+param_service.saver.score_variation_bound=5
+param_service.saver.score_expr=((10*(num stat.queue_size))>1) * ((num stat.thread_idle)>1) * ((num stat.cpu)>1) * root(4,((num stat.queue_size) * (num stat.thread_idle) * (num stat.cpu) * (num stat.fail_rate)))
+
+param_service.tsmx.score_timeout=300
+param_service.tsmx.score_variation_bound=5
+param_service.tsmx.score_expr=((num stat.tsm_idle_tape)>5) * ((num stat.tsm_idle_db)>5) * ((num stat.tsm_idle_log)>5) * root(5,((num stat.tsm_idle_db) * (num stat.tsm_idle_log) * (num stat.tsm_idle_disk) * (num stat.tsm_idle_tape) * (num stat.cpu)))
+
+param_service.redis.score_timeout=300
+param_service.redis.score_variation_bound=5
+param_service.redis.score_expr=(((num stat.used_memory_rss) / 1900000000) * 100)
+
+param_service.replicator.score_timeout=300
+param_service.replicator.score_variation_bound=5
+param_service.replicator.score_expr=(num stat.cpu)
+

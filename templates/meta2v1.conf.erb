@@ -1,0 +1,67 @@
+[General]
+daemon=false
+to_op=300000
+to_cnx=300000
+pidfile=<%= @options["localstatedir"] %>/meta2-<%= @num %>.pid
+
+[Service]
+namespace=<%= @options['ns'] %>
+type=meta2
+register=true
+load_ns_info=true
+
+[ServiceTags]
+type=m2v1
+
+[Server.meta2]
+min_workers=30
+min_spare_workers=30
+max_spare_workers=500
+max_workers=1000
+listen=<%= @options['ipaddr'] %>:<%= @options['port'] %>
+
+plugins=meta2,stats,fallback,ping<% if @enable_plugin_spoolmess == "true" %>,spoolmess<% end %>
+
+<% if @enable_plugin_spoolmess == "true" %>[Plugin.spoolmess]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/alert_spoolmess.so
+param_sopcode_prefix=MUT-GRD
+param_message_prefix=[~BCO]DEFAULT[~ECO][~BCL]REDCURRANT[~ECL]
+param_mapping:default=7000
+param_mapping:srv.threads=0399
+
+<% end %>
+[Plugin.stats]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_stats.so
+
+[Plugin.fallback]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_fallback.so
+
+[Plugin.ping]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_ping.so
+
+[Plugin.meta2]
+path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_meta2.so
+param_namespace=<%= @options['ns'] %>
+param_url=<%= @options['dburl'] %>
+param_meta2_address=<%= @options['ipaddr'] %>:<%= @options['port'] %>
+param_standard_deviation_shortening=no
+param_db_shema_path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/share/grid/meta2.shema
+<% if @options["shorten_ratio"] and @options["shorten_ratio"] != '' %>
+param_RR_shorten_ratio=<%= @options["shorten_ratio"] %>
+<% else %>
+param_RR_shorten_ratio=1.01
+<% end %>
+param_service_nums=<% if @options['usesolr'] == "true"%>solr,<% end %><%if @options['usetsm'] == "true" %>tsmx<% end %>
+<% if @options['usesolr'] == "true"%>param_lb.solr=REUSE<% end %>
+<% if @options['usetsm'] == "true"%>param_lb.tsmx=REUSE<% end %>
+param_lb.rawx=RR
+<% if @options['usesaver'] or @options['enable_replication'] or @options['enable_saver'] or @options['userepli'] %>
+param_events_enabled=true
+param_events_agregation=true
+param_events_postfail_sleep=0
+param_events_qmax_size=0
+param_events_target=<%= @spoolstatedir %>/<%= @options['ns'] %>/incoming
+param_events_dir_mkdir=no
+<% end %>
+<% if @options['vns'] %>param_quota_managed=true
+<% end %>

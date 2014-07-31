@@ -1,0 +1,10 @@
+<% if @options["enable_saver"] == "true" and !@options["enable_replication"] %>meta2.CONTENT.put=service saver ;<% end %>
+<% if !@options["enable_saver"] and @options["enable_replication"] %>meta2.CONTENT.put=service replicator;<% end %>
+<% if @options["enable_saver"] and @options["enable_replication"] %>meta2.CONTENT.put=service replicator,service saver;<% end %>
+<% if @options["enable_replication"] %>meta2.CONTAINER.create=service replicator;
+meta2.CONTAINER.destroy=service replicator;
+meta2.CONTENT.delete=service replicator;
+meta2.CONTENT.prop.*=service replicator;
+meta2.CONTAINER.prop.*=service replicator;
+<% end %>
+*=drop

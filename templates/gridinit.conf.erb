@@ -1,0 +1,21 @@
+[Default]
+listen=<%= @options["socket"] ? @options["socket"] : @socket %>
+pidfile=<%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>/gridinit.pid
+#uid=admgrid
+#gid=admgrid
+working_dir=<%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>
+
+limit.core_size=-1
+limit.max_files=8192
+limit.stack_size=256
+
+include=<%= @sysconfdird %>/*
+
+<% if @options["enable_spoolmess"] %>
+[Alerts]
+plugin=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/gridinit/gridinit_alert_spoolmess.so
+symbol=MODULE_EXPORT
+config.sopcode=<%= @options["sop_prefix"] ? @options["sop_prefix"] : 'MUT-GRD' %>-7000
+config.code_client=<%= @options["cob"] ? @options["cob"] : 'DEFAULT' %>
+config.code_projet=<%= @options["client"] ? @options["client"] : 'REDCURRANT' %>
+<% end %>
