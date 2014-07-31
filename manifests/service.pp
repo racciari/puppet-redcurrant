@@ -7,15 +7,19 @@ define redcurrant18::service ($type='service',$action='create',$num='1',$options
       $sysconfdir = "/etc/redcurrant/${options[ns]}"
       $localstatedir = "/var/run/redcurrant"
       $spoolstatedir = "/var/spool/redcurrant/${type}"
+      $datadir = "/var/lib/redcurrant/${options[ns]}/${type}-${num}"
     }
     'false': {
       $rundirname = "/GRID/${options[ns]}/${options[stgdev]}/run"
       $sysconfdir = "/GRID/${options[ns]}/${options[stgdev]}/conf"
       $localstatedir = "/GRID/${options[ns]}/${options[stgdev]}/run"
       $spoolstatedir = "/DATA/${hostname}/spool"
+      $datadir = "/DATA/${options[ns]}/${options[stgdev]}/${type}-${num}"
     }
   }
-  if ( )
+  if defined($options[datadir]) {
+    $datadir = "$options[datadir]"
+  }
 
   # File
   case $action {
