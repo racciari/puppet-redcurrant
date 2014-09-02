@@ -4,4 +4,16 @@ enabled=<%= @enabled %>
 start_at_boot=<%= @start_at_boot %>
 on_die=<%= @on_die %>
 group=<%= @group %>
+<% unless @options["uid"].nil? or @options["uid"].empty? then -%>
+uid=<%= @options["uid"] %>
+<% end -%>
+<% unless @options["gid"].nil? or @options["gid"].empty? then -%>
+gid=<%= @options["gid"] %>
+<% end -%>
+<% unless @options["max_files"].nil? or @options["max_files"].empty? then -%>
+limit.max_files=<%= @options["max_files"] %>
+<% end -%>
 env.PATH=/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+<% @environment.each_pair do |myvar,myval| -%>
+env.<%= myvar %>=<%= myval %>
+<% end -%>

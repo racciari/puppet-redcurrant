@@ -1,4 +1,4 @@
-define redcurrant18::grid-init-service ($action='create',$command,$enabled,$start_at_boot,$on_die,$group,$options={fhs_compliance=>'true'}) {
+define redcurrant18::grid-init-service ($action='create',$command,$enabled,$start_at_boot,$on_die,$group,$options={fhs_compliance=>'true'},$environment={}) {
 
   include redcurrant18
 
