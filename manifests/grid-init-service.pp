@@ -40,7 +40,7 @@ define redcurrant18::grid-init-service ($action='create',$command,$enabled,$star
   exec { "reload-${title}":
     command => "/usr/local/bin/gridinit_cmd -S ${socket} reload",
     refreshonly => true,
-    require => Package["redcurrant-grid-init"],
+    require => Package["grid-init"],
   }
 
   # Restart action

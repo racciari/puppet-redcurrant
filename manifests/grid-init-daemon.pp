@@ -37,7 +37,7 @@ define redcurrant18::grid-init-daemon ($type='gridinit',$num='0',$action='create
   file { "${name}-gridinit.conf":
     path => "${sysconfdir}/gridinit.conf",
     ensure => $file_ensure,
-    require => Package["redcurrant-grid-init"],
+    require => Package["grid-init"],
     content => template("redcurrant18/gridinit.conf.erb"),
     notify => Service["gridinit"],
     owner => "admgrid",
@@ -47,7 +47,7 @@ define redcurrant18::grid-init-daemon ($type='gridinit',$num='0',$action='create
   file { "${name}-gridinit.log4crc":
     path => "${sysconfdir}/gridinit.log4crc",
     ensure => $file_ensure,
-    require => Package["redcurrant-grid-init"],
+    require => Package["grid-init"],
     content => template("redcurrant18/gridinit.log4crc.erb"),
     notify => Service["gridinit"],
     owner => "admgrid",
@@ -55,7 +55,7 @@ define redcurrant18::grid-init-daemon ($type='gridinit',$num='0',$action='create
     mode => "0644",
   }
 
-  package { 'redcurrant-grid-init':
+  package { 'grid-init':
     ensure => present,
   }
 
@@ -63,7 +63,7 @@ define redcurrant18::grid-init-daemon ($type='gridinit',$num='0',$action='create
     ensure => running,
     enable => true,
     hasrestart => true,
-    require => Package["redcurrant-grid-init"],
+    require => Package["grid-init"],
   }
 
 }
