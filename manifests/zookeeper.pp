@@ -29,23 +29,23 @@ define redcurrant18::zookeeper ($type='zookeeper',$action='create',$num='0',$opt
       path => "/etc/zookeeper/zoo.cfg",
     }
 
-    file { "/etc/gridstorage.conf.d/${options[ns]}":
-      ensure => 'file',
-      owner => "root",
-      group => "root",
-      content => template("redcurrant18/gridstoragens.conf.erb"),
-      path => "/etc/gridstorage.conf.d/${options[ns]}",
-      before => Exec['zookeeper init']
-    }
+#    file { "/etc/gridstorage.conf.d/${options[ns]}":
+#      ensure => 'file',
+#      owner => "root",
+#      group => "root",
+#      content => template("redcurrant18/gridstoragens.conf.erb"),
+#      path => "/etc/gridstorage.conf.d/${options[ns]}",
+#      before => Exec['zookeeper init']
+#    }
   
-    exec { "zookeeper init":
-      command => "/usr/local/bin/zk-bootstrap.py ${options[ns]}",
-      unless => "/bin/sleep 3 && /usr/bin/zkCli.sh ${options[zookeeper_url]} \"ls /hc\" | grep volumes" ,
-    }
-    service { "zookeeper":
-      ensure => 'running',
-      enable => true,
-      before => Exec["zookeeper init"],
-    }
+#    exec { "zookeeper init":
+#      command => "/usr/local/bin/zk-bootstrap.py ${options[ns]}",
+#      unless => "/bin/sleep 3 && /usr/bin/zkCli.sh ${options[zookeeper_url]} \"ls /hc\" | grep volumes" ,
+#    }
+#    service { "zookeeper":
+#      ensure => 'running',
+#      enable => true,
+#      before => Exec["zookeeper init"],
+#    }
   }
 }
