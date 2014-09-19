@@ -107,3 +107,27 @@ param_service.replicator.score_timeout=300
 param_service.replicator.score_variation_bound=5
 param_service.replicator.score_expr=(num stat.cpu)
 
+param_service.rainx.score_timeout=300
+param_service.rainx.score_variation_bound=5
+
+param_service.sqlx.score_timeout=300
+param_service.sqlx.score_variation_bound=5
+param_service.sqlx.score_expr=((num stat.space)>=5) * root(3,((num stat.cpu)*(num stat.req_idle)*(num stat.space)))
+
+param_service.solr4.score_timeout=300
+param_service.solr4.score_variation_bound=5
+#lock solr4 on 95% disk usage or 10K cores.
+param_service.solr4.score_expr=((num stat.space)>=5) * ((num tag.nbcores)<10000) * root(5,(100 - ((num tag.nbcores)/100))* (100 - ((num tag.nbcores)/100))*  (num stat.cpu)*(num stat.space)*(num stat.space))
+
+param_service.clamav.score_timeout=300
+param_service.clamav.score_variation_bound=5
+param_service.clamav.score_expr=((num stat.threads_max) - (num stat.threads_live))
+
+param_service.transco.score_timeout=300
+param_service.transco.score_variation_bound=5
+#param_service.transco.score_expr=(num stat.cpu)
+#param_service.transco.score_expr=99
+
+param_service.glccm.score_timeout=300
+param_service.glccm.score_variation_bound=5
+param_service.glccm.score_expr=((num stat.space)>=5) * ((num stat.queue_size)<=30) * root(4,(1 + (500/((num stat.queue_size)+1)))*(num stat.cpu)*(num stat.cpu)*(num stat.cpu))
