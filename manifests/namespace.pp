@@ -13,6 +13,14 @@ define redcurrant18::namespace ($action='create',$ns,$options={fhs_compliance=>'
       group => 'root',
       mode => '0755',
     }
+    if $options['fhs_compliance'] == 'false' {
+      file { "/GRID/${ns}/logs":
+        ensure => directory,
+        owner => 'admgrid',
+        group => 'admgrid',
+        mode => '0755',
+      }
+    }
   }
 
 }
