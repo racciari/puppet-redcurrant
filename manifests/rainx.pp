@@ -82,8 +82,8 @@ define redcurrant18::rainx ($type='rainx',$action='create',$num='0',$options={fh
   if $action == 'create' {
     file { ["/DATA", "/DATA/${options[ns]}", "/DATA/${options[ns]}/${options[server]}" ] :
       ensure => 'directory',
-      owner => "root",
-      group => "root",
+      owner => "admgrid",
+      group => "admgrid",
       before => Exec['postinstall']
     }
 
