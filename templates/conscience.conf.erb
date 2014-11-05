@@ -100,7 +100,7 @@ param_service.tsmx.score_expr=((num stat.tsm_idle_tape)>5) * ((num stat.tsm_idle
 
 param_service.redis.score_timeout=300
 param_service.redis.score_variation_bound=5
-param_service.redis.score_expr=(((num stat.used_memory_rss) / 1900000000) * 100)
+param_service.redis.score_expr=(100-(((num stat.used_memory_rss) / 1900000000) * 100))
 
 param_service.replicator.score_timeout=300
 param_service.replicator.score_variation_bound=5
