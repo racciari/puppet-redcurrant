@@ -130,3 +130,19 @@ param_service.transco.score_variation_bound=5
 param_service.glccm.score_timeout=300
 param_service.glccm.score_variation_bound=5
 param_service.glccm.score_expr=((num stat.space)>=5) * ((num stat.queue_size)<=30) * root(4,(1 + (500/((num stat.queue_size)+1)))*(num stat.cpu)*(num stat.cpu)*(num stat.cpu))
+
+param_service.manifest.score_timeout=300
+param_service.manifest.score_variation_bound=5
+param_service.manifest.score_expr=100
+
+param_service.pac.score_timeout=300
+param_service.pac.score_variation_bound=5
+param_service.pac.score_expr=100
+
+param_service.token-management.score_timeout=300
+param_service.token-management.score_variation_bound=5
+param_service.token-management.score_expr=100
+
+param_service.streaming.score_timeout=300
+param_service.streaming.score_variation_bound=5
+param_service.streaming.score_expr=100
