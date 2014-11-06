@@ -36,11 +36,6 @@ define redcurrant18::grid-init-service ($action='create',$command,$enabled,$star
     mode => "0644",
   }
 
-  # Package
-  package { "redcurrant-grid-init":
-    ensure => installed,
-  }
-
   # Reload action
   exec { "reload-${title}":
     command => "/usr/local/bin/gridinit_cmd -S ${socket} reload",
