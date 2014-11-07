@@ -64,7 +64,7 @@ define redcurrant18::rawx ($type='rawx',$action='create',$num='0',$options={fhs_
   }
 
   if $action == 'create' {
-    file { "${options['vol']}":
+    file { "${options['datadir']}":
       ensure => $directory_ensure,
       owner => "admgrid",
       group => "admgrid",

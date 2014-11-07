@@ -14,7 +14,7 @@ define redcurrant18::meta2 ($type='meta2',$action='create',$num='0',$options={pr
 
   redcurrant18::grid-init-service { "${options['ns']}-${type}-${num}":
     action => $action,
-    command => "/usr/local/bin/meta2_server -v -p ${rundirname}/${type}-${num}.pid -s RC,${options['ns']},${options['stgdev']},${type}-${num} -O Endpoint=${options['ipaddr']}:${options['port']} ${options['ns']} ${options['vol']}", 
+    command => "/usr/local/bin/meta2_server -v -p ${rundirname}/${type}-${num}.pid -s RC,${options['ns']},${options['stgdev']},${type}-${num} -O Endpoint=${options['ipaddr']}:${options['port']} ${options['ns']} ${options['datadir']}", 
     enabled => 'true',
     start_at_boot => 'no',
     on_die => 'respawn',
@@ -32,7 +32,7 @@ define redcurrant18::meta2 ($type='meta2',$action='create',$num='0',$options={pr
   }
 
   if $action == 'create' {
-    file { "${options['vol']}":
+    file { "${options['datadir']}":
       ensure => $directory_ensure,
       owner => "admgrid",
       group => "admgrid",
