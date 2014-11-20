@@ -1,8 +1,8 @@
 [Default]
 listen=<%= @options["socket"] ? @options["socket"] : @socket %>
 pidfile=<%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>/gridinit.pid
-#uid=admgrid
-#gid=admgrid
+uid=admgrid
+gid=admgrid
 working_dir=<%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>
 
 limit.core_size=-1
