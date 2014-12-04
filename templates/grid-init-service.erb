@@ -13,7 +13,10 @@ gid=<%= @options["gid"] %>
 <% unless @options["max_files"].nil? or @options["max_files"].empty? then -%>
 limit.max_files=<%= @options["max_files"] %>
 <% end -%>
-env.PATH=/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
-<% @environment.each_pair do |myvar,myval| -%>
-env.<%= myvar %>=<%= myval %>
+env.PATH=/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin<%= @options["path"] ? ':'+@options["path"] : '' %>
+<% if (not(@environment.empty?)) -%>
+<% @environment.split(/\s(?=(?:[^"]|"[^"]*")*$)/).each do |item| -%>
+<% myvar, myval = item.split('=') -%>
+env.<%= myvar %>=<%= myval.gsub(/\A"|"\Z/,'') %>
+<% end -%>
 <% end -%>

@@ -17,18 +17,20 @@ cluster.name: es-<%= @options['ns'] %>
 # Node names are generated dynamically on startup, so you're relieved
 # from configuring them manually. You can tie this node to a specific name:
 #
-node.name: <%= @srvname %>
+node.name: <%= @hostname %>-node
 
 # Every node can be configured to allow or deny being eligible as the master,
 # and to allow or deny to store the data.
 #
 # Allow this node to be eligible as a master node (enabled by default):
 #
-node.master: <%= @options['node_master'] %>
+node.master: <%= @options["node_master"] ? @options["node_master"] : 'false' %>
+
 #
 # Allow this node to store data (enabled by default):
 #
-node.data: <%= @options['node_data'] %>
+node.data: <%= @options["node_data"] ? @options["node_data"] : 'true' %>
+
 
 # You can exploit these settings to design advanced cluster topologies.
 #
@@ -122,7 +124,7 @@ index.number_of_replicas: <%= @options['index_number_of_replicas'] ? @options['i
 
 # Path to directory containing configuration (this file and logging.yml):
 #
-path.conf: <%= @confdirname %>/<%= @srvname %>
+path.conf: <%= @sysconfdir %>/<%= @srvname %>
 
 # Path to directory where to store index data allocated for this node.
 #
@@ -136,11 +138,11 @@ path.data: <%= @datadir %>
 
 # Path to temporary files:
 #
-path.work: <%= @tmpdir %>
+path.work: <%= @localstatedir %>
 
 # Path to log files:
 #
-path.logs: <%= @logdirname %>
+path.logs: <%= @logdir %>
 
 # Path to where plugins are installed:
 #
@@ -152,7 +154,7 @@ path.logs: <%= @logdirname %>
 # If a plugin listed here is not installed for current node, the node will not start.
 #
 #plugin.mandatory: mapper-attachments,lang-groovy
-plugin.mandatory: redcurrant
+<% if @options['discovery_mode'] == 'redcurrant' -%>plugin.mandatory: redcurrant<% end -%>
 
 
 ################################### Memory ####################################
@@ -299,7 +301,16 @@ http.port: <%= @options['port'] ? @options['port'] : '9200' %>
 #
 # 1. Disable multicast discovery (enabled by default):
 #    (must be disabled for Redcurrant plugin to work)
+<% if @options['discovery_mode'] == 'multicast' -%>
+discovery.zen.ping.multicast.enabled: true
+<% end %>
+<% if @options['discovery_mode'] == 'unicast' -%>
 discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: [<% @options['unicast_hosts'].split(/\s+/).each do |h| %><%= h+"," %><% end -%>]
+<% end %>
+<% if @options['discovery_mode'] == 'redcurrant' %>
+discovery.zen.ping.multicast.enabled: false
+<% end %>
 #
 # 2. Configure an initial list of master nodes in the cluster
 #    to perform discovery when new nodes (master or data) are started:
@@ -366,6 +377,7 @@ discovery.zen.ping.multicast.enabled: false
 #http.jsonp.enable: false
 
 
+<% if @options['discovery_mode'] == 'redcurrant' -%>
 ################################## Redcurrant ##############################
 
 redcurrant.enabled: true
@@ -382,4 +394,5 @@ discovery.redcurrant.registration_timeout: 10000
 #discovery.redcurrant.conscience.ip: 
 #discovery.redcurrant.conscience.port: 
 
+<% end -%>
 

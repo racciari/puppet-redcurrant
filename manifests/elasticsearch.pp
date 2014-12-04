@@ -1,24 +1,31 @@
 define redcurrant18::elasticsearch ($type='elasticsearch', $action='create',
   $num='1', $options={fhs_compliance => 'true', environment => {}}) {
 
-  #include redcurrant18
+  include redcurrant18
 
-  $srvname = "${type}-${num}"
   $ES_HOME = "/usr/share/elasticsearch"
+  $srvname = "${type}-${num}"
 
   # Path
   case $options['fhs_compliance'] {
-    'true':  { $rundirname = "/var/run/redcurrant/${options['ns']}"
-               $confdirname = "/etc/redcurrant/${options['ns']}"
-               $logdirname = "/var/log/redcurrant/${options['ns']}/${type}"
-               $tmpdir = "/var/tmp/redcurrant/${options['ns']}/${srvname}"
-               $datadir = "/var/lib/redcurrant/${options['ns']}/${srvname}" }
-    'false': { $griddirprefix = "/GRID/${options['ns']}/${options['stgdev']}"
-               $rundirname = "${griddirprefix}/run"
-               $confdirname = "${griddirprefix}/conf"
-               $logdirname = "${griddirprefix}/logs/${type}"
-               $tmpdir = "${griddirprefix}/tmp/${srvname}"
-               $datadir = "/DATA/${options['ns']}/${options['stgdev']}/${srvname}" }
+    'true':  {
+      $rundirname = "/etc/redcurrant/${options[ns]}/run"
+      $sysconfdir = "/etc/redcurrant/${options[ns]}"
+      $localstatedir = "/var/run/redcurrant"
+      $spoolstatedir = "/var/spool/redcurrant/${type}"
+      if "${options[vol]}" != "" { $datadir = "$options[vol]" }
+      else { $datadir = "/var/lib/redcurrant/${options[ns]}/${type}-${num}" }
+      $logdir = "/var/log/redcurrant/${options[ns]}/${type}-${num}"
+    }
+    'false': {
+      $rundirname = "/GRID/${options[ns]}/${options[stgdev]}/run"
+      $sysconfdir = "/GRID/${options[ns]}/${options[stgdev]}/conf"
+      $localstatedir = "/GRID/${options[ns]}/${options[stgdev]}/run"
+      $spoolstatedir = "/DATA/${hostname}/spool"
+      if "${options[vol]}" != "" { $datadir = $options['vol'] }
+      else { $datadir = "/DATA/${options[ns]}/${options[stgdev]}/${type}-${num}" }
+      $logdir = "/GRID/${options[ns]}/logs"
+    }
   }
 
   # File
@@ -42,20 +49,12 @@ define redcurrant18::elasticsearch ($type='elasticsearch', $action='create',
         stgdev => "${options['stgdev']}",
       }
     }
-    else {
-      file { $rundirname:
-        ensure => directory,
-        owner => 'admgrid',
-        group => 'admgrid',
-        mode => '0755',
-      }
-    }
-    package { ['elasticsearch', 'elasticsearch-redcurrant']:
-      ensure => installed,
-    }
+    #package { ['elasticsearch', 'elasticsearch-redcurrant']:
+    #  ensure => installed,
+    #}
   }
 
-  file { ["${confdirname}/${srvname}",$datadir,$logdirname]:
+  file { ["${sysconfdir}/${srvname}"]:
     ensure => directory,
     owner => 'admgrid',
     group => 'admgrid',
@@ -63,7 +62,7 @@ define redcurrant18::elasticsearch ($type='elasticsearch', $action='create',
   }
 
   file { "${type}-${num}.yml":
-    path => "${confdirname}/${srvname}/${type}.yml",
+    path => "${sysconfdir}/${srvname}/${type}.yml",
     ensure => $file_ensure,
     content => template("redcurrant18/${type}.yml.erb"),
     owner => "admgrid",
@@ -72,7 +71,7 @@ define redcurrant18::elasticsearch ($type='elasticsearch', $action='create',
   }
 
   file { "${type}-${num}.logging.yml":
-    path => "${confdirname}/${srvname}/logging.yml",
+    path => "${sysconfdir}/${srvname}/logging.yml",
     ensure => $file_ensure,
     content => template("redcurrant18/${type}.logging.yml.erb"),
     owner => "admgrid",
@@ -80,30 +79,26 @@ define redcurrant18::elasticsearch ($type='elasticsearch', $action='create',
     mode => "0644",
   }
 
-  if $options['ipportgroup'] {
-    $groups = "${options[ns]},${type},${num},${srvname},${options[ipaddr]}:${options[port]}"
-  }
-  else {
-    $groups = "${options[ns]},${type},${num},${srvname}"
+  if $options['discovery_mode'] == '' {
+    $options['discovery_mode'] = 'redcurrant'
   }
 
   if $options['environment'] {
     $environment = $options['environment']
   }
   else {
-    $environment = {}
+    $environment = {'ES_MIN_MEM' => '1g', 'ES_MAX_MEM' => '1g'}
   }
 
   redcurrant18::grid-init-service { "${options['ns']}-${srvname}":
     action => $action,
-    command => "${ES_HOME}/bin/elasticsearch -p ${rundirname}/${srvname}.pid -Des.default.path.home=${ES_HOME} -Des.default.path.work=${tmpdir} -Des.default.path.conf=${confdirname}/${srvname}",
+    command => "${ES_HOME}/bin/elasticsearch -p ${rundirname}/${srvname}.pid -Des.default.path.home=${ES_HOME} -Des.default.path.conf=${sysconfdir}/${srvname}",
     enabled => 'true',
     start_at_boot => 'no',
     on_die => 'respawn',
-    group => $groups,
+    group => "${options[ns]},${type},${num},${srvname}",
     options => $options,
-    environment => $environment,
+    environment => $options['environment']
   }
 
 }
-# vi:syntax=puppet:filetype=puppet:ts=2:et:

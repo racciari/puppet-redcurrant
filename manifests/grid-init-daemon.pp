@@ -56,7 +56,7 @@ define redcurrant18::grid-init-daemon ($type='gridinit',$num='0',$action='create
   }
 
   package { 'redcurrant-grid-init':
-    name => "grid-init",
+    name => "redcurrant-grid-init",
     ensure => present,
   }
 
