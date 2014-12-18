@@ -1,0 +1,13 @@
+{
+  "author": "racciari",
+  "dependencies": [],
+  "license": "Apache License, Version 2.0",
+  "name": "redcurrant-core",
+  "operatingsystem_support": [],
+  "project_page": "http://www.redcurrant.io",
+  "requirements": [],
+  "source": "UNKNOWN",
+  "summary": "Puppet module for Redcurrant",
+  "tags": [],
+  "version": "0.0.1"
+}

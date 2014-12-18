@@ -1,25 +1,42 @@
-define redcurrant18::rawx ($type='rawx',$action='create',$num='0',$options={fhs_compliance=>'true'}) {
+define redcurrant18::rawx ($type='rawx',$action='create',$num='0',$options={fhs_compliance=>true}) {
 
   include redcurrant18
 
+  if $options[vol] {
+    $datadir = $options[vol]
+  }
+  
   # Path
-  case $options['fhs_compliance'] {
-    'true':  { $sysconfdir = "/etc/redcurrant/${options['ns']}"
-               $localstatedir = "/var/run/redcurrant/${options['ns']}"
-               $sharedstatedir = '/var/lib/redcurrant'
-               $logstatedir = "/var/log/redcurrant/${options['ns']}"
+  if $options[fhs_compliance] {
+    $rcdir = "redcurrant/${options['ns']}"
+    $sysconfdir = "/etc/${rcdir}"
+    $localstatedir = "/var/run/${rcdir}"
+    $sharedstatedir = '/var/lib/redcurrant'
+    $logstatedir = "/var/log/${rcdir}"
+    unless $datadir {
+      $datadir = "/var/lib/${rcdir}/${type}-${num}"
     }
-    'false': { $sharedstatedir = "/GRID/${options['ns']}/${options['stgdev']}"
-               $sysconfdir = "${sharedstatedir}/conf"
-               $localstatedir = "${sharedstatedir}/run"
-               $logstatedir = "${sharedstatedir}/logs"
+  } else {
+    $rcdir = "${options['ns']}/${options['stgdev']}"
+    $sharedstatedir = "/GRID/${rcdir}"
+    $sysconfdir = "${sharedstatedir}/conf"
+    $localstatedir = "${sharedstatedir}/run"
+    $logstatedir = "${sharedstatedir}/logs"
+    unless $datadir {
+      $datadir = "/DATA/${rcdir}/${type}-${num}"
     }
   }
 
-  redcurrant18::grid-init-service { "${options['ns']}-${type}-${num}":
+  if $options[prefixdir] {
+    $prefix = $options[prefixdir]
+  } else {
+    $prefix = '/usr/local'
+  }
+  
+  redcurrant18::gridinitservice { "${options['ns']}-${type}-${num}":
     action => $action,
-    command => "/usr/local/bin/redc-${type}-monitor ${sysconfdir}/${type}-${num}-monitor.conf ${sysconfdir}/${type}-${num}-monitor.log4crc",
-    enabled => 'true',
+    command => "${prefix}/bin/redc-${type}-monitor ${sysconfdir}/${type}-${num}-monitor.conf ${sysconfdir}/${type}-${num}-monitor.log4crc",
+    enabled => true,
     start_at_boot => 'no',
     on_die => 'respawn',
     group => "${options['ns']},${type},${num}",
@@ -29,6 +46,7 @@ define redcurrant18::rawx ($type='rawx',$action='create',$num='0',$options={fhs_
   # Packages
   package { 'redcurrant-mod-httpd':
     ensure => installed,
+    allow_virtual => false
   }
 
   # File
@@ -64,7 +82,7 @@ define redcurrant18::rawx ($type='rawx',$action='create',$num='0',$options={fhs_
   }
 
   if $action == 'create' {
-    file { "${options['datadir']}":
+    file { $datadir:
       ensure => $directory_ensure,
       owner => "admgrid",
       group => "admgrid",
@@ -75,7 +93,7 @@ define redcurrant18::rawx ($type='rawx',$action='create',$num='0',$options={fhs_
       ns => "${options['ns']}",
       options => $options,
     }
-    if $options['fhs_compliance'] == 'false' {
+    unless $options[fhs_compliance] {
       redcurrant18::stgdev {"${options['ns']}-${options['stgdev']}-${type}-${num}":
         action => 'create',
         ns => "${options['ns']}",

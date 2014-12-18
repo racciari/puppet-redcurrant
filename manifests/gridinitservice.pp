@@ -1,16 +1,29 @@
-define redcurrant18::grid-init-service ($action='create',$command,$enabled,$start_at_boot,$on_die,$group,$options={fhs_compliance=>'true'},$environment={}) {
+define redcurrant18::gridinitservice ($action='create',$command,$enabled,$start_at_boot,$on_die,$group,$options={fhs_compliance=>true},$environment={}) {
 
   include redcurrant18
 
   # Path
-  case $options['fhs_compliance'] {
-    'true':  { $sysconfdir = '/etc/gridinit.d'
-               $socket = '/var/run/gridinit.sock' }
-    'false': { $sysconfdir = "/GRID/${hostname}/conf/gridinit.conf.d"
-               $socket = "/GRID/${hostname}/run/gridinit.sock" }
+  if $options[fhs_compliance] {
+    $sysconfdir = '/etc/gridinit.d'
+    $socket = '/var/run/gridinit.sock'
+  } else {
+    $sysconfdir = "/GRID/${hostname}/conf/gridinit.conf.d"
+    $socket = "/GRID/${hostname}/run/gridinit.sock"
   }
   
-  redcurrant18::grid-init-daemon {"gridinit-0":
+  if $options[prefixdir] {
+    $prefix = $options[prefixdir]
+  } else {
+    $prefix = '/usr/local'
+  }
+  
+  if $options[libdir] {
+    $lib = $options[libdir]
+  } else {
+    $lib = 'lib64'
+  }
+  
+  redcurrant18::gridinitdaemon {"gridinit-0":
     options => {
       fhs_compliance => $options[fhs_compliance],
       ns => 'common',
@@ -38,16 +51,16 @@ define redcurrant18::grid-init-service ($action='create',$command,$enabled,$star
 
   # Reload action
   exec { "reload-${title}":
-    command => "/usr/local/bin/gridinit_cmd -S ${socket} reload",
+    command => "${prefix}/bin/gridinit_cmd -S ${socket} reload",
     refreshonly => true,
     require => Package["redcurrant-grid-init"],
   }
 
   # Restart action
   exec { "restart-${title}":
-    command => "/usr/local/bin/gridinit_cmd -S ${socket} restart ${title}",
+    command => "${prefix}/bin/gridinit_cmd -S ${socket} restart ${title}",
     refreshonly => true,
-    refresh => "/usr/local/bin/gridinit_cmd -S ${socket} restart ${title}",
+    refresh => "${prefix}/bin/gridinit_cmd -S ${socket} restart ${title}",
     require => Exec["reload-${title}"],
   }
 

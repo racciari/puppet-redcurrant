@@ -4,12 +4,12 @@ LoadModule log_config_module    <%= @options["httpd_moduledir"] ? @options["http
 LoadModule mime_module          <%= @options["httpd_moduledir"] ? @options["httpd_moduledir"] : '/usr/lib64/httpd/modules' %>/mod_mime.so
 
 Listen <%= @options["ipaddr"] %>:<%= @options["port"] %>
-PidFile <%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>/rawx-<%= @num %>-httpd.pid
+PidFile <%= @localstatedir %>/rawx-<%= @num %>-httpd.pid
 ServerRoot <%= @sharedstatedir %>/core
 ServerName localhost
 ServerSignature Off
 ServerTokens Prod
-DocumentRoot <%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>
+DocumentRoot <%= @localstatedir %>
 TypesConfig /etc/mime.types
 
 User  <%= @options["user"] ? @options["user"] : 'admgrid' %>
@@ -46,9 +46,9 @@ DavDepthInfinity Off
 
 grid_hash_width 2
 grid_hash_depth 2
-grid_docroot <%= @options["datadir"] %>
+grid_docroot <%= @datadir %>
 grid_namespace <%= @options["ns"] %>
-grid_dir_run <%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>
+grid_dir_run <%= @localstatedir %>
 
 <Directory />
 DAV rawx

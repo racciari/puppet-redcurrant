@@ -2,7 +2,7 @@
 daemon=false
 to_op=300000
 to_cnx=300000
-pidfile=<%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>/conscience-<%= @num %>.pid
+pidfile=<%= @localstatedir %>/conscience-<%= @num %>.pid
 
 [Service]
 namespace=<%= @options["ns"] %>
@@ -18,12 +18,12 @@ min_spare_workers=30
 max_spare_workers=100
 max_workers=200
 
-listen=<%= @options["port"] %>
+listen=<%= @options["ipaddr"] %>:<%= @options["port"] %>
 
 plugins=conscience,stats,fallback,ping<% if @options["enable_plugin_spoolmess"] == "true" %>,spoolmess<% end %>
 
 <% if @options["enable_plugin_spoolmess"] == "true" %>[Plugin.spoolmess]
-path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/alert_spoolmess.so
+path=<%= @prefix %>/<%= @lib %>/grid/alert_spoolmess.so
 param_sopcode_prefix=<%= @options["sop_prefix"] ? @options["sop_prefix"] : 'MUT-GRD' %>
 param_message_prefix=[~BCO]<%= @options["cob"] ? @options["cob"] : 'DEFAULT' %>[~ECO][~BCL]<%= @options["client"] ? @options["client"] : 'REDCURRANT' %>[~ECL]
 param_mapping:default=7000
@@ -37,25 +37,36 @@ param_mapping:conscience.solr.score=0305
 
 <% end %>
 [Plugin.stats]
-path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_stats.so
+path=<%= @prefix %>/<%= @lib %>/grid/msg_stats.so
 
 [Plugin.fallback]
-path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_fallback.so
+path=<%= @prefix %>/<%= @lib %>/grid/msg_fallback.so
 
 [Plugin.ping]
-path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_ping.so
+path=<%= @prefix %>/<%= @lib %>/grid/msg_ping.so
 
 [Plugin.conscience]
-path=<%= @options["prefixdir"] ? @options["prefixdir"] : '/usr/local' %>/<%= @options["lib"] ? @options["lib"] : 'lib64' %>/grid/msg_conscience.so
+path=<%= @prefix %>/<%= @lib %>/grid/msg_conscience.so
 param_namespace=<%= @options["ns"] %>
 param_chunk_size=<%= @options["chunk_size"] ? @options["chunk_size"] : '10485760' %>
 param_score_timeout=300
+<% if @options["meta0_url"] and @options["meta0_url"] != '' %>
+param_meta0=<%= @options["meta0_url"] %>
+<% end %>
 param_serialize_srvinfo_cache=true
 param_option.ns_status=<%= @options["state"] %>
 param_option.automatic_open=true
 param_option.meta2_max_versions=0
-#param_option.storage_policy=
-param_option.service_update_policy.meta1=meta2=KEEP|1|1|tag.type=m2v2;solr=APPEND;redis=REPLACE;sqlx=APPEND|1|1;tsmx=KEEP
+<% if @options["stgpol"] and @options["stgpol"] != '' %>
+param_option.storage_policy=<%= @options["stgpol"] %>
+<% else %>
+param_option.storage_policy=NORMAL
+<% end %>
+<% if @options["m1update"] and @options["m1update"] != '' %>
+param_option.service_update_policy.meta1=<%= @options["m1update"] %>
+<% else %>
+param_option.service_update_policy.meta1=meta2=NONE|1|0|tag.type=m2v2;solr=APPEND;redis=REPLACE;sqlx=APPEND|3;tsmx=KEEP
+<% end%>
 param_storage_conf=<%= @sysconfdir %>/conscience-<%= @num %>.storage
 <% if @options["enable_worm"] == "true" %>param_option.worm=on
 <% end %>
@@ -67,9 +78,30 @@ param_option.FLATNS_hash_size=0
 <% end %>
 param_events=<%= @sysconfdir %>/conscience-<%= @num %>.events
 
-<% if @options["vns"] %>param_option.vns_list=<%= @options["vns"] %>
-
+<% if @options["vns"] and @options["vns"] != "" %>
+param_option.vns_list=<%= @options["vns"] %>
 <% end %>
+
+<% if @options["vnsopt"] and @options["vnsopt"] != "" %>
+<% (@options["vnsopt"]).each do |v| -%>
+<% if v.is_a?(Hash) %>
+<% if v['quota'] != '' %>
+param_option.quota_<%= v['name'] %>=<%= v['quota'] %>
+<% end %>
+<% if v['stgpol'] != '' %>
+param_option.<%= v['name'] %>_storage_policy=<%= v['stgpol'] %>
+<%end %>
+<% if v['m1update'] and v['m1update'] != '' %>
+param_option.<%= v['name'] %>_service_update_policy.meta1=<%= v['m1update'] %>
+<% end %>
+<% end %>
+<% end -%>
+<% end %>
+
+<% if @options["container_max_size"] and @options["container_max_size"] != "" %>
+param_option.container_max_size=<%= @options["container_max_size"]%>
+<% end %>
+
 param_service.default.score_timeout=300
 param_service.default.score_variation_bound=5
 param_service.default.score_expr=100

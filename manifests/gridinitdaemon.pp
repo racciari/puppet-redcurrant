@@ -1,21 +1,20 @@
-define redcurrant18::grid-init-daemon ($type='gridinit',$num='0',$action='create',$options={fhs_compliance=>'true'}) {
+define redcurrant18::gridinitdaemon ($type='gridinit',$num='0',$action='create',$options={fhs_compliance=>true}) {
 
   include redcurrant18
 
   # Path
-  case $options['fhs_compliance'] {
-    'true':  { $sysconfdir = "/etc"
-               $sysconfdird = "/etc/gridinit.d"
-               $localstatedir = "/var/run"
-               $socket = "/var/run/gridinit.sock"
-               $dirs = "${sysconfdir}"
-    }
-    'false': { $sysconfdir = "/GRID/${hostname}/conf"
-               $sysconfdird = "/GRID/${hostname}/conf/gridinit.conf.d"
-               $localstatedir = "/GRID/${hostname}/run"
-               $socket = "/GRID/${hostname}/run/gridinit.sock"
-               $dirs = ["/GRID/${hostname}","/GRID/${hostname}/conf","/GRID/${hostname}/conf/gridinit.conf.d","/GRID/${hostname}/core","/GRID/${hostname}/run"]
-    }
+  if $options[fhs_compliance] {
+    $sysconfdir = "/etc"
+    $sysconfdird = "/etc/gridinit.d"
+    $localstatedir = "/var/run"
+    $socket = "/var/run/gridinit.sock"
+    $dirs = "${sysconfdir}"
+  } else {
+    $sysconfdir = "/GRID/${hostname}/conf"
+    $sysconfdird = "/GRID/${hostname}/conf/gridinit.conf.d"
+    $localstatedir = "/GRID/${hostname}/run"
+    $socket = "/GRID/${hostname}/run/gridinit.sock"
+    $dirs = ["/GRID/${hostname}","/GRID/${hostname}/conf","/GRID/${hostname}/conf/gridinit.conf.d","/GRID/${hostname}/core","/GRID/${hostname}/run"]
   }
 
   case $action {
@@ -58,6 +57,7 @@ define redcurrant18::grid-init-daemon ($type='gridinit',$num='0',$action='create
   package { 'redcurrant-grid-init':
     name => "redcurrant-grid-init",
     ensure => present,
+    allow_virtual => false
   }
 
   service { 'gridinit':

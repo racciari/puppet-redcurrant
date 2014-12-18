@@ -1,23 +1,31 @@
-define redcurrant18::zookeeper ($type='zookeeper',$action='create',$num='0',$options={}) {
+define redcurrant18::zookeeper ($type='zookeeper',$action='create',$num='0',$options={fhs_compliance=>true}) {
 
   include redcurrant18
 
   # Packages
   package { 'zookeeper':
     ensure => installed,
+    allow_virtual => false
   }
 
 # openjdk mandatory for zookeeper. gcj is bullhsit
   package { 'java-1.6.0-openjdk':
     ensure => installed,
+    allow_virtual => false
   }
 
   # Path
-  case $fhs_compliance {
-    'true':  { $rundirname = "/etc/redcurrant/${options[ns]}/run" }
-    'false': { $rundirname = "/GRID/${options[ns]}/${options[stgdev]}/run" }
+  if $options[fhs_compliance] {
+    $rundirname = "/etc/redcurrant/${options['ns']}/run"
+  } else {
+    $rundirname = "/GRID/${options['ns']}/${options['stgdev']}/run"
   }
-
+  
+  if $options[prefixdir] {
+    $prefix = $options[prefixdir]
+  } else {
+    $prefix = '/usr/local'
+  }
 
   if $action == 'create' {
     file { "/etc/zookeeper/zoo.cfg":
@@ -29,23 +37,23 @@ define redcurrant18::zookeeper ($type='zookeeper',$action='create',$num='0',$opt
       path => "/etc/zookeeper/zoo.cfg",
     }
 
-#    file { "/etc/gridstorage.conf.d/${options[ns]}":
-#      ensure => 'file',
-#      owner => "root",
-#      group => "root",
-#      content => template("redcurrant18/gridstoragens.conf.erb"),
-#      path => "/etc/gridstorage.conf.d/${options[ns]}",
-#      before => Exec['zookeeper init']
-#    }
+    file { "/etc/gridstorage.conf.d/${options['ns']}":
+      ensure => 'file',
+      owner => "root",
+      group => "root",
+      content => template("redcurrant18/gridstoragens.conf.erb"),
+      path => "/etc/gridstorage.conf.d/${options['ns']}",
+      before => Exec['zookeeper init']
+    }
   
-#    exec { "zookeeper init":
-#      command => "/usr/local/bin/zk-bootstrap.py ${options[ns]}",
-#      unless => "/bin/sleep 3 && /usr/bin/zkCli.sh ${options[zookeeper_url]} \"ls /hc\" | grep volumes" ,
-#    }
-#    service { "zookeeper":
-#      ensure => 'running',
-#      enable => true,
-#      before => Exec["zookeeper init"],
-#    }
+    exec { "zookeeper init":
+      command => "${prefix}/bin/zk-bootstrap.py ${options['ns']}",
+      unless => "/bin/sleep 3 && /usr/bin/zkCli.sh ${options['zookeeper_url']} \"ls /hc\" | grep volumes" ,
+    }
+    service { "zookeeper":
+      ensure => 'running',
+      enable => true,
+      before => Exec["zookeeper init"],
+    }
   }
 }

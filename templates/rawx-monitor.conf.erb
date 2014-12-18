@@ -1,6 +1,6 @@
 [Default]
 daemon=false
-pidfile=<%= @options["localstatedir"] ? @options["localstatedir"] : @localstatedir %>/rawx-<%= @num %>-monitor.pid
+pidfile=<%= @localstatedir %>/rawx-<%= @num %>-monitor.pid
 
 [Child]
 command=/usr/sbin/httpd.worker -D FOREGROUND -f <%= @sysconfdir %>/rawx-<%= @num %>-httpd.conf
@@ -12,11 +12,15 @@ rlimit.max_files=32768
 [Service]
 ns=<%= @options["ns"] %>
 type=rawx
-location=default
-stgclass=DEFAULT
+location=<%= @options["server"] %>
+<% if @options["stgclass"] and @options["stgclass"] != '' %>
+stgclass=<%= @options["stgclass"] %>
+<% else %>
+stgclass=NORMAL
+<% end %>
 addr=<%= @options["ipaddr"] %>:<%= @options["port"] %>
 
 [Volume]
-docroot=<%= @options["datadir"] %>
+docroot=<%= @datadir %>
 filer.user=root
 filer.pwd=root
