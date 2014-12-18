@@ -1,21 +1,24 @@
-define redcurrant18::zookeeper ($type='zookeeper',$action='create',$num='0',$options={}) {
+define redcurrant18::zookeeper ($type='zookeeper',$action='create',$num='0',$options={fhs_compliance=>true}) {
 
   include redcurrant18
 
   # Packages
   package { 'zookeeper':
     ensure => installed,
+    allow_virtual => false
   }
 
 # openjdk mandatory for zookeeper. gcj is bullhsit
   package { 'java-1.6.0-openjdk':
     ensure => installed,
+    allow_virtual => false
   }
 
   # Path
-  case $fhs_compliance {
-    'true':  { $rundirname = "/etc/redcurrant/${options[ns]}/run" }
-    'false': { $rundirname = "/GRID/${options[ns]}/${options[stgdev]}/run" }
+  if $options[fhs_compliance] {
+    $rundirname = "/etc/redcurrant/${options['ns']}/run"
+  } else {
+    $rundirname = "/GRID/${options['ns']}/${options['stgdev']}/run"
   }
 
 

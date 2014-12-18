@@ -50,22 +50,27 @@ class redcurrant18 {
 
   package { 'redcurrant-server':
     ensure => installed,
+    allow_virtual => false
   }
 
   package { 'redcurrant-mod-snmp':
     ensure => installed,
+    allow_virtual => false
   }
 
   package { 'redcurrant-rsyslog':
     ensure => installed,
+    allow_virtual => false
   }
 
   package { 'redcurrant-logrotate':
     ensure => installed,
+    allow_virtual => false
   }
 
   package { 'log4c':
     ensure => installed,
+    allow_virtual => false
   }
 
 }

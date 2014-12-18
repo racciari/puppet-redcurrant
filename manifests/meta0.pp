@@ -1,21 +1,34 @@
-define redcurrant18::meta0 ($type='meta0',$action='create',$num='0',$options={prefixdir=>'/usr/local',bindir=>'/usr/local/bin',fhs_compliance=>'true'}) {
+define redcurrant18::meta0 ($type='meta0',$action='create',$num='0',$options={prefixdir=>'/usr/local',bindir=>'/usr/local/bin',fhs_compliance=>true}) {
 
   include redcurrant18
-
-  # Path
-  case $options['fhs_compliance'] {
-    'true':  { $rundirname = "/etc/redcurrant/${options['ns']}/run"
-               $sysconfdir = "/etc/redcurrant/${options['ns']}"
-               $localstatedir = '/var/run/redcurrant' }
-    'false': { $rundirname = "/GRID/${options['ns']}/${options['stgdev']}/run"
-               $sysconfdir = "/GRID/${options['ns']}/${options['stgdev']}/conf"
-               $localstatedir = "/GRID/${options['ns']}/${options['stgdev']}/run" }
+  
+  if $options[vol] {
+    $datadir = $options[vol]
   }
 
-  redcurrant18::grid-init-service { "${options['ns']}-${type}-${num}":
+  # Path
+  if $options[fhs_compliance] {
+    $rcdir = "redcurrant/${options['ns']}"
+    $rundirname = "/etc/${rcdir}/run"
+    $sysconfdir = "/etc/${rcdir}"
+    $localstatedir = '/var/run/redcurrant'
+    unless $datadir {
+      $datadir = "/var/lib/${rcdir}/${type}-${num}"
+    }
+  } else {
+    $rcdir = "${options['ns']}/${options['stgdev']}"
+    $rundirname = "/GRID/${rcdir}/run"
+    $sysconfdir = "/GRID/${rcdir}/conf"
+    $localstatedir = "/GRID/${rcdir}/run"
+    unless $datadir {
+      $datadir = "/DATA/${rcdir}/${type}-${num}"
+    }
+  }
+
+  redcurrant18::gridinitservice { "${options['ns']}-${type}-${num}":
     action => $action,
-    command => "/usr/local/bin/meta0_server -v -p ${rundirname}/${type}-${num}.pid -s RC,${options['ns']},${options['stgdev']},${type}-${num} -O Endpoint=${options['ipaddr']}:${options['port']} ${options['ns']} ${options['datadir']}", 
-    enabled => 'true',
+    command => "/usr/local/bin/meta0_server -v -p ${rundirname}/${type}-${num}.pid -s RC,${options['ns']},${options['stgdev']},${type}-${num} -O Endpoint=${options['ipaddr']}:${options['port']} ${options['ns']} ${datadir}", 
+    enabled => true,
     start_at_boot => 'no',
     on_die => 'respawn',
     group => "${options['ns']},${type}",
@@ -32,7 +45,7 @@ define redcurrant18::meta0 ($type='meta0',$action='create',$num='0',$options={pr
   }
 
   if $action == 'create' {
-    file { "${options['datadir']}":
+    file { $datadir:
       ensure => $directory_ensure,
       owner => "admgrid",
       group => "admgrid",
@@ -43,7 +56,7 @@ define redcurrant18::meta0 ($type='meta0',$action='create',$num='0',$options={pr
       ns => "${options['ns']}",
       options => $options,
     }
-    if $options['fhs_compliance'] == 'false' {
+    unless $options[fhs_compliance] {
       redcurrant18::stgdev {"${options['ns']}-${options['stgdev']}-${type}-${num}":
         action => 'create',
         ns => "${options['ns']}",

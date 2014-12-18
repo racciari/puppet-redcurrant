@@ -1,25 +1,24 @@
-define redcurrant18::gridagent ($type='gridagent',$action='create',$num='0',$options={fhs_compliance=>'true'}) {
+define redcurrant18::gridagent ($type='gridagent',$action='create',$num='0',$options={fhs_compliance=>true}) {
 
   include redcurrant18
 
   # Path
-  case $options['fhs_compliance'] {
-    'true':  { $sysconfdir = "/etc"
-               $spoolstatedir = "/var/spool/redcurrant/${type}"
-               $toplevel_dirs = ["/etc/gridstorage.conf.d","/var/lib/redcurrant"]
-               $required_dirs = ["/var/lib/redcurrant/spool"]
-    }
-    'false': { $sysconfdir = "/GRID/common/conf"
-               $spoolstatedir = "/DATA/${hostname}/spool"
-               $toplevel_dirs = ["/etc/gridstorage.conf.d","/GRID/common"]
-               $required_dirs = ["/GRID/common/conf","/GRID/common/core","/GRID/common/run"]
-    }
+  if $options['fhs_compliance'] {
+    $sysconfdir = "/etc"
+    $spoolstatedir = "/var/spool/redcurrant/${type}"
+    $toplevel_dirs = ["/etc/gridstorage.conf.d","/var/lib/redcurrant"]
+    $required_dirs = ["/var/lib/redcurrant/spool"]
+  } else {
+    $sysconfdir = "/GRID/common/conf"
+    $spoolstatedir = "/DATA/${hostname}/spool"
+    $toplevel_dirs = ["/etc/gridstorage.conf.d","/GRID/common"]
+    $required_dirs = ["/GRID/common/conf","/GRID/common/core","/GRID/common/run"]
   }
 
-  redcurrant18::grid-init-service { "common-${type}-${num}":
+  redcurrant18::gridinitservice { "common-${type}-${num}":
     action => $action,
     command => "/usr/local/bin/gridagent --child-req ${sysconfdir}/${type}.conf ${sysconfdir}/${type}.log4crc",
-    enabled => 'true',
+    enabled => true,
     start_at_boot => 'no',
     on_die => 'respawn',
     group => "common,${type}",
@@ -88,7 +87,7 @@ define redcurrant18::gridagent ($type='gridagent',$action='create',$num='0',$opt
   }
 
   exec { "reload-gridagent":
-    command => "/bin/ps -fC 'gridagent' | /bin/awk '/ --child-req / {print $2}'",
+    command => '/bin/ps -fC \'gridagent\' | /bin/awk \'/ --child-req / {print $2}\'',
     refreshonly => true,
   }
 

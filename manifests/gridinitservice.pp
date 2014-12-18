@@ -1,16 +1,17 @@
-define redcurrant18::grid-init-service ($action='create',$command,$enabled,$start_at_boot,$on_die,$group,$options={fhs_compliance=>'true'},$environment={}) {
+define redcurrant18::gridinitservice ($action='create',$command,$enabled,$start_at_boot,$on_die,$group,$options={fhs_compliance=>true},$environment={}) {
 
   include redcurrant18
 
   # Path
-  case $options['fhs_compliance'] {
-    'true':  { $sysconfdir = '/etc/gridinit.d'
-               $socket = '/var/run/gridinit.sock' }
-    'false': { $sysconfdir = "/GRID/${hostname}/conf/gridinit.conf.d"
-               $socket = "/GRID/${hostname}/run/gridinit.sock" }
+  if $options[fhs_compliance] {
+    $sysconfdir = '/etc/gridinit.d'
+    $socket = '/var/run/gridinit.sock'
+  } else {
+    $sysconfdir = "/GRID/${hostname}/conf/gridinit.conf.d"
+    $socket = "/GRID/${hostname}/run/gridinit.sock"
   }
   
-  redcurrant18::grid-init-daemon {"gridinit-0":
+  redcurrant18::gridinitdaemon {"gridinit-0":
     options => {
       fhs_compliance => $options[fhs_compliance],
       ns => 'common',

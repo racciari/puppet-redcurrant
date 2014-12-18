@@ -1,23 +1,19 @@
-define redcurrant18::conscience ($action='create',$type='conscience',$num='0',$options={fhs_compliance=>'true'}) {
+define redcurrant18::conscience ($action='create',$type='conscience',$num='0',$options={fhs_compliance=>true}) {
 
   include redcurrant18
 
   # Required vars
-  if $options['ns'] == undef or ($options['fhs_compliance'] == 'false' and $options['stgdev'] == undef) {
+  if $options['ns'] == undef or ($options['fhs_compliance'] == false and $options['stgdev'] == undef) {
     fail("All required variables are not satisfied for redcurrant18::conscience")
   }
 
   # Path
-  case $options['fhs_compliance'] {
-    'true':  {
-      $sysconfdir = "/etc/redcurrant/${options[ns]}"
+  if $options['fhs_compliance'] {
+      $sysconfdir = "/etc/redcurrant/${options['ns']}"
       $localstatedir = '/var/run/redcurrant'
-    }
-    'false': {
+  } else {
       $sysconfdir = "/GRID/${options['ns']}/${options['stgdev']}/conf"
       $localstatedir = "/GRID/${options['ns']}/${options['stgdev']}/run"
-    }
-    default: { err("FHS compliance should be set to True or False, bad option: ${options['fhs_compliance']}") }
   }
 
   # File
@@ -31,10 +27,10 @@ define redcurrant18::conscience ($action='create',$type='conscience',$num='0',$o
   if $action == 'create' {
     redcurrant18::namespace {"${options['ns']}-${type}-${options['num']}":
       action => 'create',
-      ns => "${options[ns]}",
+      ns => "${options['ns']}",
       options => $options,
     }
-    if $options['fhs_compliance'] == 'false' {
+    unless $options['fhs_compliance'] {
       redcurrant18::stgdev {"${options['ns']}-${options['stgdev']}-${type}-${options['num']}":
         action => 'create',
         ns => "${options['ns']}",
@@ -81,10 +77,10 @@ define redcurrant18::conscience ($action='create',$type='conscience',$num='0',$o
     mode => "0644",
   }
 
-  redcurrant18::grid-init-service { "${options['ns']}-${type}-${num}":
+  redcurrant18::gridinitservice { "${options['ns']}-${type}-${num}":
     action => $action,
     command => "/usr/local/bin/gridd ${sysconfdir}/${type}-${num}.conf ${sysconfdir}/${type}-${num}.log4crc",
-    enabled => 'true',
+    enabled => true,
     start_at_boot => 'no',
     on_die => 'respawn',
     group => "${options['ns']},${type}",
